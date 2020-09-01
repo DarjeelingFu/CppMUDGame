@@ -4,7 +4,6 @@
 
 #include "player.h"
 #include "scene.h"
-#include "task.h"
 #include <stdlib.h>
 #include <algorithm>
 #include <math.h>
@@ -30,7 +29,7 @@ private:
 	vector<Armor> armors; // 所有装备
 	vector<Weapon> weapons; // 所有武器
 	vector<NPC> NPCs;	// 所有NPC
-	vector<Task> tasks; // 所有任务
+	vector<ItemCollectingTask> collectingTasks; // 所有任务
 	Player* player;			// 玩家
 
 public:
@@ -39,6 +38,7 @@ public:
 	void loadArmors(string path); // 加载装备
 	void loadWeapons(string path); // 加载武器
 	void loadNPCs(string path); // 加载NPC
+	void loadItemCollectingTasks(string path); // 加载所有物品收集任务
 	void saveProfile(string playerProfile, string sceneProfile, Player* player, Scene* currentScene); // 存档
 	void loadProfile(string playerProfile, string sceneProfile, Player* player, Scene* currentScene); // 读档
 	void bindDoubleConnectedSences(Scene& scene_1, Scene& scene_2); // 双向连接

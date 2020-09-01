@@ -81,3 +81,47 @@ void Player::alter(int prompt, float value) {
 	}
 
 }
+
+// 物品收集任务检查进度
+int ItemCollectingTask::checkProgress(Player* player) {
+	if (getState() == false)
+		return DISMISS;
+
+	switch (getTargetItemType())
+	{
+	case SUPPLY: {
+		if (find(
+			player->getBag()->getSupplies().begin(),
+			player->getBag()->getSupplies().end(),
+			getTargetItemId()) != player->getBag()->getSupplies().end()
+			) {
+			return COMPLISHED;
+		}
+	}break;
+
+	case ARMOR: {
+		if (find(
+			player->getBag()->getArmors().begin(),
+			player->getBag()->getArmors().end(),
+			getTargetItemId()) != player->getBag()->getArmors().end()
+			) {
+			return COMPLISHED;
+		}
+	}break;
+
+	case WEAPON: {
+		if (find(
+			player->getBag()->getWeapons().begin(),
+			player->getBag()->getWeapons().end(),
+			getTargetItemId()) != player->getBag()->getWeapons().end()
+			) {
+			return COMPLISHED;
+		}
+	}break;
+
+	default:
+		break;
+	}
+
+	return UNCOMPLISHED;
+}

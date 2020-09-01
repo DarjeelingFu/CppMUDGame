@@ -3,7 +3,14 @@
 #define _PLAYER_H
 
 #include <string>
+#include <map>
 #include "bag.h"
+
+enum TaskProgress {
+	DISMISS,
+	UNCOMPLISHED,
+	COMPLISHED
+};
 
 using namespace std;
 
@@ -64,6 +71,64 @@ private:
 	Bag bag;			// ±³°ü
 };
 
+class Task {
+public:
+	Task(
+		int npc, int rewardItemType, int rewardItemId, 
+		int targetItemType, int targetItemId, string dismiss, string uncomplished,
+		string complished
+	) :
+		npc(npc), rewardItemType(rewardItemType), rewardItemId(rewardItemId),
+		targetItemType(targetItemType), targetItemId(targetItemId) {
+		state = false;
+		dialogues[DISMISS] = dismiss;
+		dialogues[UNCOMPLISHED] = uncomplished;
+		dialogues[COMPLISHED] = complished;
+	}
+
+public:
+	int getNPC() { return npc; }
+	string getDialogueWithProgress(int progress) { return dialogues[progress]; }
+	bool getState() { return state; }
+
+	int getRewardItemType() { return rewardItemType; }
+	int getRewardItemId() { return rewardItemId; }
+
+	int getTargetItemType() { return targetItemType; }
+	int getTargetItemId() { return targetItemId; }
+
+	virtual int checkProgress(Player* player) = 0;
+
+private:
+	int npc;
+	bool state;
+
+	map<int, string> dialogues;
+	int rewardItemType;
+	int rewardItemId;
+
+	int targetItemType;
+	short targetItemId;
+
+};
+
+class ItemCollectingTask : public Task {
+public:
+	ItemCollectingTask(
+		int npc, int rewardItemType, int rewardItemId, int targetItemType, int targetItemId,
+		string dismiss, string uncomplished, string complished
+	) :
+		Task(
+			npc, rewardItemType, rewardItemId, targetItemType, targetItemId,
+			dismiss, uncomplished, complished
+		) {}
+
+public:
+
+private:
+	virtual int checkProgress(Player* player);
+};
+
 class NPC : public Player {
 public:
 	NPC(
@@ -81,23 +146,29 @@ public:
 	) :
 		Player(name, health, maxHealth, strength, defence, sensitive, damage, money),
 		sceneID(sceneID), itemList(itemList), career(career)
-	{}
+	{
+		// task = NULL;
+	}
 
 	NPC(const NPC& npc) :
 		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career)
-	{}
+	{
+		// task = npc.task;
+	}
 
 public:
 	vector<string>& getDialogues() { return dialogues; }
 	int getSceneID() { return sceneID; }
 	string getItemList() { return itemList; }
 	int getCareer() { return career; }
+	vector<Task*>& getTask() { return tasks; }
 
 private:
 	vector<string> dialogues;
 	int sceneID;
 	string itemList;
 	int career;
+	vector<Task*> tasks;
 
 };
 

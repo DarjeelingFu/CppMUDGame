@@ -13,9 +13,8 @@ Game::Game() {
 	loadArmors("data/armors.dat");
 	loadWeapons("data/weapons.dat");
 	loadNPCs("data/npcs.dat");
-
+	loadItemCollectingTasks("data/itemcollectingtask.dat");
 	
-
 }
 
 // ´æµµ
@@ -844,4 +843,3 @@ void Game::run() {
 	}
 
 }
- 

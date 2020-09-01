@@ -185,3 +185,39 @@ void Game::loadNPCs(string path) {
 
 	}
 }
+
+void Game::loadItemCollectingTasks(string path) {
+	fstream file(path, ios::in);
+	int order = 0;
+	char c;
+	while (!file.eof()) {
+		c = file.get();
+		if (c == '#') {
+			string npc, rewardItenType, rewardItemId, targetItemType, targetItemId;
+			string dismiss, uncomplished, complished;
+			getline(file, npc); // ÏûÊÍµôÒ»ÐÐ
+
+			getline(file, npc);
+			getline(file, rewardItenType);
+			getline(file, rewardItemId);
+			getline(file, targetItemType);
+			getline(file, targetItemId);
+
+			getline(file, dismiss);
+			getline(file, uncomplished);
+			getline(file, complished);
+
+			collectingTasks.emplace_back(ItemCollectingTask(
+				atoi(npc.c_str()), atoi(rewardItenType.c_str()),
+				atoi(rewardItemId.c_str()), atoi(targetItemType.c_str()),
+				atoi(targetItemId.c_str()), dismiss, uncomplished, complished
+			));
+		}
+	}
+	file.close();
+
+	for (auto ite = collectingTasks.begin(); ite != collectingTasks.end(); ite++) {
+		NPCs[ite->getNPC()].getTask().emplace_back(&*ite);
+	}
+
+}
