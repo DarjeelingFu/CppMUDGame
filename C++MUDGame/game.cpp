@@ -924,6 +924,7 @@ void Game::run() {
 							int state = task->checkProgress(player);
 							if (state == UNCOMPLISHED) {
 								cout << task->getDialogueWithProgress(UNCOMPLISHED) << endl;
+								gameState = SCENE;
 								system("Pause");
 							}
 							if (state == COMPLISHED) {
