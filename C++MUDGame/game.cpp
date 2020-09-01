@@ -365,6 +365,9 @@ void Game::fight(Player* player, NPC* enemy) {
 		player->alter(HEALTH, -damageFromEnemy);
 		cout << "玩家受到了" << damageFromEnemy << "点伤害" << endl;
 
+		if (player->attr(HEALTH) <= 0)
+			return;
+
 		int ifEscape = round(player, enemy);
 		if (ifEscape) {
 			cout << "逃跑成功" << endl;
@@ -499,6 +502,8 @@ void Game::trade(Player* player, NPC* npc) {
 					int price = supplies[targetGoodsID].getValue();
 
 					player->alter(MONEY, -price);
+					npc->alter(MONEY, price);
+
 					cout << "金钱-" << price << ", 获得了" << supplies[targetGoodsID].getName() << endl;
 					system("Pause");
 				}
@@ -536,6 +541,7 @@ void Game::trade(Player* player, NPC* npc) {
 					int price = supplies[targetGoodsID].getSoldValue();
 
 					npc->alter(MONEY, -price);
+					player->alter(MONEY, price);
 					cout << "金钱+" << price << ", 失去了" << supplies[targetGoodsID].getName() << endl;
 					system("Pause");
 				}
