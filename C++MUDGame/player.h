@@ -67,7 +67,7 @@ private:
 	float sensitive;	// 灵敏
 	float damage;		// 伤害
 	int money;			// 金钱
-
+	string skill;       //技能
 	Bag bag;			// 背包
 };
 

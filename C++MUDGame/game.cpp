@@ -320,7 +320,7 @@ float Game::calculateRealDamage(Player* player, float defaultDamage) {
 // 玩家回合
 int Game::round(Player* player, NPC* enemy) {
 	cout << "[血量]" << player->attr(HEALTH) << "/" << player->attr(MAXHEALTH) << endl;
-	vector<string> fightMenuItems = { "攻击", "逃跑" };
+	vector<string> fightMenuItems = { "攻击", "逃跑" ,"技能"};
 	generateMenuFromVector(fightMenuItems);
 	string fightMenuItem = getSelectedMenuItem(fightMenuItems);
 	system("cls");
@@ -337,6 +337,15 @@ int Game::round(Player* player, NPC* enemy) {
 		if (escapePossibility > 0.5)
 			return 1;
 		else return 0;
+	}
+	if (fightMenuItem == "技能") {
+		int realDamage = calculateRealDamage(enemy, player->attr(DAMAGE)*2.5);
+		enemy->alter(HEALTH, -realDamage);
+		cout << player->getName() << "造成" << realDamage << "点伤害" << endl;
+		int skilllost = calculateRealDamage(player, player->attr(DAMAGE)*0.5);
+		player->alter(HEALTH, -skilllost);
+		cout << player->getName() << "损失" << skilllost << "点血量" << endl;
+		return 0;
 	}
 }
 
