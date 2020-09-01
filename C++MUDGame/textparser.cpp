@@ -157,7 +157,7 @@ void Game::loadNPCs(string path) {
 				NPCs[order].getDialogues().emplace_back(dialogue);
 				getline(file, dialogue);
 			}
-
+			order++;
 		}
 	}
 

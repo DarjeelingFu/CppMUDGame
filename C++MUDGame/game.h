@@ -64,9 +64,9 @@ public:
 	int round(Player* player, NPC* enemy); // 玩家回合
 	void getRandItemsForDefeatedEnemy(Player* player, NPC* enemy); // 获得掉落物品
 	void giveItem(Player* player, short id, int prompt); // 给予物品
-	void eraeItwm(Player* player, short id, int prompt); // 移除物品
+	void eraeItem(Player* player, short id, int prompt); // 移除物品
 	void trade(Player* player, NPC* npc); // 交易
-	void bindTaskToNPC(Player* player, Task* task); // 绑定任务到NPC
+	string getRandomDialogue(NPC* npc); // 随机获得一句对话
 	void run(); // 游戏运行入口
 
 };

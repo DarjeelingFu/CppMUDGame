@@ -90,6 +90,7 @@ public:
 	int getNPC() { return npc; }
 	string getDialogueWithProgress(int progress) { return dialogues[progress]; }
 	bool getState() { return state; }
+	void setState(bool state) { this->state = state; }
 
 	int getRewardItemType() { return rewardItemType; }
 	int getRewardItemId() { return rewardItemId; }
@@ -143,17 +144,20 @@ public:
 		int sceneID,
 		string itemList,
 		int career
+		// string dialogue
 	) :
 		Player(name, health, maxHealth, strength, defence, sensitive, damage, money),
-		sceneID(sceneID), itemList(itemList), career(career)
+		sceneID(sceneID), itemList(itemList), career(career) // dialogue(dialogue)
 	{
-		// task = NULL;
+		
 	}
 
 	NPC(const NPC& npc) :
 		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career)
 	{
-		// task = npc.task;
+		for (auto ite = npc.dialogues.begin(); ite != npc.dialogues.end(); ite++) {
+			this->dialogues.emplace_back(*ite);
+		}
 	}
 
 public:
@@ -162,6 +166,7 @@ public:
 	string getItemList() { return itemList; }
 	int getCareer() { return career; }
 	vector<Task*>& getTask() { return tasks; }
+	// string getDialogue() { return dialogue; }
 
 private:
 	vector<string> dialogues;
@@ -169,6 +174,7 @@ private:
 	string itemList;
 	int career;
 	vector<Task*> tasks;
+	// string dialogue;
 
 };
 

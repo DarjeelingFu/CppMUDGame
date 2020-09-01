@@ -84,11 +84,12 @@ void Game::showPlayerInformation(Player* player) {
 	cout << "[血量]\t" << player->attr(HEALTH) << endl;
 	cout << "[防御]\t" << player->attr(DEFENCE) << endl;
 	cout << "[敏捷]\t" << player->attr(SENSITIVE) << endl;
+	cout << "[伤害]\t" << player->attr(DAMAGE) << endl;
 	cout << "[金钱]\t" << (int)player->attr(MONEY) << endl;
 	generateDecorations("-", 20);
 
-	if (!player->getBag()->headArmorSlot.empty())
-		cout << "[武器]\t" << armors[player->getBag()->weaponSlot.top()].getName() << endl;
+	if (!player->getBag()->weaponSlot.empty())
+		cout << "[武器]\t" << weapons[player->getBag()->weaponSlot.top()].getName() << endl;
 	else
 		cout << "[武器]\t" << "无" << endl;
 
@@ -198,26 +199,50 @@ void Game::equipArmor(Player* player, short id) {
 	switch (armors[id].getPosition())
 	{
 	case HEAD: {
-		if (!player->getBag()->headArmorSlot.empty())
-			player->getBag()->headArmorSlot.pop();
+		if (!player->getBag()->headArmorSlot.empty()) {
+			if (player->getBag()->headArmorSlot.top() == id) {
+				player->getBag()->headArmorSlot.pop();
+				break;
+			}
+			else
+				player->getBag()->headArmorSlot.pop();
+		}
 		player->getBag()->headArmorSlot.push(id);
 	}break;
 
 	case BODY: {
-		if (!player->getBag()->bodyArmorSlot.empty())
-			player->getBag()->bodyArmorSlot.pop();
+		if (!player->getBag()->bodyArmorSlot.empty()) {
+			if (player->getBag()->bodyArmorSlot.top() == id) {
+				player->getBag()->bodyArmorSlot.pop();
+				break;
+			}
+			else
+				player->getBag()->bodyArmorSlot.pop();
+		}
 		player->getBag()->bodyArmorSlot.push(id);
 	}break;
 
 	case LEG: {
-		if (!player->getBag()->legArmorSlot.empty())
-			player->getBag()->legArmorSlot.pop();
+		if (!player->getBag()->legArmorSlot.empty()) {
+			if (player->getBag()->legArmorSlot.top() == id) {
+				player->getBag()->legArmorSlot.pop();
+				break;
+			}
+			else
+				player->getBag()->legArmorSlot.pop();
+		}
 		player->getBag()->legArmorSlot.push(id);
 	}break;
 
 	case FOOT: {
-		if (!player->getBag()->footArmorSlot.empty())
-			player->getBag()->footArmorSlot.pop();
+		if (!player->getBag()->footArmorSlot.empty()) {
+			if (player->getBag()->footArmorSlot.top() == id) {
+				player->getBag()->footArmorSlot.pop();
+				break;
+			}
+			else
+				player->getBag()->footArmorSlot.pop();
+		}
 		player->getBag()->footArmorSlot.push(id);
 	}break;
 
@@ -274,8 +299,16 @@ void Game::listWeapons(Bag* bag) {
 
 // 装备武器并刷新伤害值
 void Game::equipWeapon(Player* player, short id) {
-	if (!player->getBag()->weaponSlot.empty())
-		player->getBag()->weaponSlot.pop();
+	if (!player->getBag()->weaponSlot.empty()) {
+		if (player->getBag()->weaponSlot.top() == id) {
+			player->getBag()->weaponSlot.pop();
+			player->alter(DAMAGE, -weapons[id].getDamage());
+			return;
+		}
+		else {
+			player->getBag()->weaponSlot.pop();
+		}
+	}
 	player->getBag()->weaponSlot.push(id);
 	
 	player->attr(DAMAGE, 10 + weapons[id].getDamage());
@@ -435,7 +468,7 @@ void Game::giveItem(Player* player, short id, int prompt) {
 }
 
 // 移除物品
-void Game::eraeItwm(Player* player, short id, int prompt) {
+void Game::eraeItem(Player* player, short id, int prompt) {
 	switch (prompt)
 	{
 	case SUPPLY: {
@@ -485,7 +518,7 @@ void Game::trade(Player* player, NPC* npc) {
 				short targetGoodsID = npc->getBag()->getSupplies()[id - 1];
 				if (player->attr(MONEY) >= supplies[targetGoodsID].getValue()) {
 					giveItem(player, targetGoodsID, SUPPLY);
-					eraeItwm(npc, targetGoodsID, SUPPLY);
+					eraeItem(npc, targetGoodsID, SUPPLY);
 
 					//float randomFactor = 1.0 - rand() % 20 / 100;
 					//int price = (int)(supplies[targetGoodsID].getValue() * randomFactor);
@@ -524,7 +557,7 @@ void Game::trade(Player* player, NPC* npc) {
 				short targetGoodsID = player->getBag()->getSupplies()[id - 1];
 				if (npc->attr(MONEY) >= supplies[targetGoodsID].getValue()) {
 					giveItem(npc, targetGoodsID, SUPPLY);
-					eraeItwm(player, targetGoodsID, SUPPLY);
+					eraeItem(player, targetGoodsID, SUPPLY);
 
 					//float randomFactor = 1.0 - rand() % 20 / 100;
 					//int price = (int)(supplies[targetGoodsID].getValue() * randomFactor);
@@ -545,6 +578,11 @@ void Game::trade(Player* player, NPC* npc) {
 		}
 	}
 
+}
+
+// 随机获得一句对话
+string Game::getRandomDialogue(NPC* npc) {
+	return npc->getDialogues()[rand() % npc->getDialogues().size()];
 }
 
 // 运行
@@ -639,12 +677,14 @@ void Game::run() {
 			if (selected == "交互") {
 				system("cls");
 				char option;
-				cout << "1.交易\t" << "2.攻击\t" << "3.返回" << endl;
+				cout << "1.交易\t" << "2.攻击\t" << "3.交谈\t" << "4.返回" << endl;
 				cin >> option;
 				if (option == '1')
 					gameState = TRADE;
 				if (option == '2')
 					gameState = FIGHT;
+				if (option == '3')
+					gameState = DIALOGUE;
 			}
 
 			// 系统
@@ -841,6 +881,92 @@ void Game::run() {
 			}
 
 		}break;
+
+		case DIALOGUE: {
+			system("cls");
+			if (!currentScene->getNPCs().empty()) {
+				int order = 0;
+				for (auto ite = currentScene->getNPCs().begin(); ite != currentScene->getNPCs().end(); ite++) {
+					NPC npc = **ite;
+					cout << ++order << "." << npc.getName() << '\t';
+				}
+				cout << endl;
+				char target;
+				cin >> target;
+				if (target > '0' && target <= '9' && atoi(&target) > 0 && atoi(&target) <= currentScene->getNPCs().size()) {
+					int option = atoi(&target);
+					NPC* npc = currentScene->getNPCs()[option - 1];
+					if (npc->getTask().empty()) {
+						cout << getRandomDialogue(npc) << endl;
+						gameState = SCENE;
+						system("Pause");
+					}
+					else {
+						auto ite = npc->getTask().begin();
+						Task* task = *ite;
+						if (task->getState() == false) {
+							cout << task->getDialogueWithProgress(DISMISS) << endl;
+							cout << "1.接受\t" << "2.拒绝\t" << endl;
+							char option;
+							cin >> option;
+							if (option == '1') {
+								task->setState(true);
+								cout << endl << "已接受任务" << endl;
+								gameState = SCENE;
+								system("Pause");
+							}
+							else {
+								gameState = SCENE;
+								system("Pause");
+							}
+						}
+						else {
+							int state = task->checkProgress(player);
+							if (state == UNCOMPLISHED) {
+								cout << task->getDialogueWithProgress(UNCOMPLISHED) << endl;
+								system("Pause");
+							}
+							if (state == COMPLISHED) {
+
+								cout << task->getDialogueWithProgress(COMPLISHED) << endl;
+								giveItem(player, task->getRewardItemId(), task->getRewardItemType());
+								switch (task->getRewardItemType())
+								{
+								case SUPPLY: {
+									cout << "获得了" << supplies[task->getRewardItemId()].getName() << endl;
+								}break;
+
+								case ARMOR: {
+									player->getBag()->addArmor(armors[task->getRewardItemId()].getID());
+									cout << "获得了" << armors[task->getRewardItemId()].getName() << endl;
+								}break;
+
+								case WEAPON: {
+									player->getBag()->addWeapon(weapons[task->getRewardItemId()].getID());
+									cout << "获得了" << weapons[task->getRewardItemId()].getName() << endl;
+								}break;
+
+								default:
+									break;
+								}
+
+								eraeItem(player, task->getTargetItemId(), task->getTargetItemType());
+								cout << "移交了任务物品" << endl;
+
+								npc->getTask().erase(npc->getTask().begin());
+								gameState = SCENE;
+								system("Pause");
+							}
+						}
+					}
+				}
+			}
+			else {
+				cout << "无交谈对象" << endl;
+				gameState = SCENE;
+				system("Pause");
+			}
+		}
 
 		default:
 			break;
