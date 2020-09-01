@@ -1,0 +1,15 @@
+name, description, value, soldValue, supplyType, effectValue
+# // 0
+应急理智顶液
+不要丧失理智，补充HP50点
+100
+80
+0
+50
+# // 1
+千斗五十铃的胖次
+不知道在哪里捡到的，似乎五十铃经常会换胖次。由于过于刺激，使用后HP-10
+1000
+10000
+0
+-10
