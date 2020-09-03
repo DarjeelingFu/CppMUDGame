@@ -790,8 +790,8 @@ void Game::run() {
 
 			if (selected == "开始游戏") {
 
-				//// 进行新游戏，创建角色
-				//player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
+				// 进行新游戏，创建角色
+				player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
 				//player->getBag()->addSupply(0);
 				//player->getBag()->addSupply(1);
 				//player->getBag()->addArmor(0);
@@ -799,8 +799,8 @@ void Game::run() {
 				//player->getBag()->addArmor(2);
 				//player->getBag()->addWeapon(0);
 
-				//// 确定当前地点
-				//currentScene = &scenes[0];
+				// 确定当前地点
+				currentScene = &scenes[0];
 
 				//// 绑定NPC
 				//bindAllNPCsToScene();
@@ -1006,17 +1006,17 @@ void Game::run() {
 				if (option != 0) {
 					fight(player, currentScene->getNPCs()[option - 1]);
 					if (player->attr(HEALTH) < 0) {
-						gameState = TITLE;
 						cout << "已死亡" << endl;
 						system("Pause");
+						gameState = TITLE;
 					}
 					else if (currentScene->getNPCs()[option - 1]->attr(HEALTH) < 0) {
 						cout << "敌人被击败" << endl;
 						getRandItemsForDefeatedEnemy(player, currentScene->getNPCs()[option - 1]);
 						currentScene->getNPCs().erase(currentScene->getNPCs().begin() + option - 1);
 						system("Pause");
+						gameState = SCENE;
 					}
-					gameState = SCENE;
 				}
 			}
 			else {
