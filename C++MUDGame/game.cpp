@@ -6,7 +6,6 @@ using namespace std;
 
 // 构造函数
 Game::Game() {
-	currentScene = nullptr;
 
 	loadScene("data/scenes.dat");
 	loadSupplyItems("data/supplies.dat");
@@ -15,34 +14,131 @@ Game::Game() {
 	loadNPCs("data/npcs.dat");
 	loadItemCollectingTasks("data/itemcollectingtask.dat");
 	
+	player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
+
+	currentScene = &scenes[0];
 }
 
 // 存档
-void Game::saveProfile(string playerProfile, string sceneProfile, Player* player, Scene* currentScene) {
-	fstream playerFile(playerProfile, ios::out | ios::binary);
-	const char* playerPt = (char*)player;
-	playerFile.write(playerPt, sizeof(Player));
-	playerFile.close();
+void Game::saveProfile(string path, Player* player, Scene* currentScene) {
+	fstream profile(path, ios::binary | ios::out);
 
-	fstream sceneFile(sceneProfile, ios::out | ios::binary);
-	const char* scenePt = (char*)currentScene;
-	sceneFile.write(scenePt, sizeof(Scene));
-	sceneFile.close();
+	// 写入玩家名称，先用int储存长度
+	// int nameSize = sizeof(player->getName());
+	// profile.write((char*)&nameSize, sizeof(int));
+	// profile.write(player->getName().c_str(), nameSize);
 
+	// 写入一系列属性
+	for (int i = 0; i < 6; i++) {
+		float attr = player->attr(i);
+		profile.write((char*)&attr, sizeof(float));
+	}
+	int money = player->attr(MONEY);
+	profile.write((char*)&money, sizeof(int));
+
+	// 写入背包库存信息，各种类型先用int储存长度
+	int supplyLen = player->getBag()->getSupplies().size();
+	int armorLen = player->getBag()->getArmors().size();
+	int weaponLen = player->getBag()->getWeapons().size();
+
+	profile.write((char*)&supplyLen, sizeof(int));
+	profile.write((char*)&armorLen, sizeof(int));
+	profile.write((char*)&weaponLen, sizeof(int));
+
+	for (auto ite = player->getBag()->getSupplies().begin(); ite != player->getBag()->getSupplies().end(); ite++) {
+		profile.write((char*) & *ite, sizeof(short));
+	}
+	for (auto ite = player->getBag()->getArmors().begin(); ite != player->getBag()->getArmors().end(); ite++) {
+		profile.write((char*) & *ite, sizeof(short));
+	}
+	for (auto ite = player->getBag()->getWeapons().begin(); ite != player->getBag()->getWeapons().end(); ite++) {
+		profile.write((char*) & *ite, sizeof(short));
+	}
+
+	// 写入装备穿着信息
+	vector<short> equipments;
+	if (player->getBag()->weaponSlot.empty())
+		equipments.emplace_back(-1);
+	else
+		equipments.emplace_back(player->getBag()->weaponSlot.top());
+
+	if (player->getBag()->headArmorSlot.empty())
+		equipments.emplace_back(-1);
+	else
+		equipments.emplace_back(player->getBag()->headArmorSlot.top());
+
+	if (player->getBag()->bodyArmorSlot.empty())
+		equipments.emplace_back(-1);
+	else
+		equipments.emplace_back(player->getBag()->bodyArmorSlot.top());
+
+	if (player->getBag()->legArmorSlot.empty())
+		equipments.emplace_back(-1);
+	else
+		equipments.emplace_back(player->getBag()->legArmorSlot.top());
+
+	if (player->getBag()->footArmorSlot.empty())
+		equipments.emplace_back(-1);
+	else
+		equipments.emplace_back(player->getBag()->footArmorSlot.top());
+
+	for (auto ite = equipments.begin(); ite != equipments.end(); ite++) {
+		profile.write((char*) & *ite, sizeof(short));
+	}
+
+	profile.close();
 }
 
 // 读档
-void Game::loadProfile(string playerProfile, string sceneProfile, Player* player, Scene* currentScene) {
-	fstream playerFile(playerProfile, ios::out | ios::binary);
-	char* playerPt = (char*)player;
-	playerFile.read(playerPt, sizeof(Player));
-	playerFile.close();
+void Game::loadProfile(string path, Player* player, Scene* currentScene) {
+	fstream profile(path, ios::binary | ios::in);
 
-	fstream sceneFile(sceneProfile, ios::out | ios::binary);
-	char* scenePt = (char*)currentScene;
-	sceneFile.read(scenePt, sizeof(Scene));
-	sceneFile.close();
+	// 读入一系列属性
+	profile.seekg(ios::beg);
+	for (int i = 0; i < 6; i++) {
+		float attr;
+		profile.read((char*)&attr, sizeof(float));
+		player->attr(i, attr);
+	}
+	int money;
+	profile.read((char*)&money, sizeof(int));
+	player->attr(MONEY, money);
 
+	int lens[3];
+	profile.read((char*)lens, 3 * sizeof(int));
+
+	player->getBag()->getSupplies().clear();
+	for (int i = 0; i < lens[0]; i++) {
+		short id;
+		profile.read((char*)&id, sizeof(short));
+		player->getBag()->getSupplies().emplace_back(id);
+	}
+
+	player->getBag()->getArmors().clear();
+	for (int i = 0; i < lens[1]; i++) {
+		short id;
+		profile.read((char*)&id, sizeof(short));
+		player->getBag()->getArmors().emplace_back(id);
+	}
+
+	player->getBag()->getWeapons().clear();
+	for (int i = 0; i < lens[2]; i++) {
+		short id;
+		profile.read((char*)&id, sizeof(short));
+		player->getBag()->getWeapons().emplace_back(id);
+	}
+
+	short equipments[5];
+	profile.read((char*)equipments, 5 * sizeof(short));
+
+	if (equipments[0] != -1) {
+		equipWeapon(player, equipments[0]);
+	}
+	for (int i = 1; i < 5; i++) {
+		if (equipments[i] != -1) {
+			equipArmor(player, equipments[i]);
+		}
+	}
 }
 
 // 生成分隔符
@@ -125,12 +221,36 @@ void Game::generateMenuFromVector(vector<string>& menuItems) {
 	cout << endl;
 }
 
+// 获得输入
+int Game::getInputNumber(int limit) {
+	string input;
+	cin >> input;
+	if (isDigital(input) && stoi(input) <= limit) {
+		return stoi(input);
+	}
+	return 0;
+}
+
+// 判断是否为数字
+bool Game::isDigital(string input) {
+	for (int i = 0; i < input.length(); i++) {
+		if (input[i] < '0' || input[0] > '9')
+			return false;
+	}
+	return true;
+}
+
 // 获得指定的菜单项
 string Game::getSelectedMenuItem(vector<string>& menuItems) {
-	short option;
-	cin >> option;
-	if (option >= 1 && option <= menuItems.size())
+
+	generateMenuFromVector(menuItems);
+
+	int option = getInputNumber(menuItems.size());
+
+	if (option != 0) {
 		return menuItems[option - 1];
+	}
+
 	return "error";
 }
 
@@ -354,7 +474,6 @@ float Game::calculateRealDamage(Player* player, float defaultDamage) {
 int Game::round(Player* player, NPC* enemy) {
 	cout << "[血量]" << player->attr(HEALTH) << "/" << player->attr(MAXHEALTH) << endl;
 	vector<string> fightMenuItems = { "攻击", "逃跑" };
-	generateMenuFromVector(fightMenuItems);
 	string fightMenuItem = getSelectedMenuItem(fightMenuItems);
 	system("cls");
 
@@ -520,9 +639,6 @@ void Game::trade(Player* player, NPC* npc) {
 					giveItem(player, targetGoodsID, SUPPLY);
 					eraeItem(npc, targetGoodsID, SUPPLY);
 
-					//float randomFactor = 1.0 - rand() % 20 / 100;
-					//int price = (int)(supplies[targetGoodsID].getValue() * randomFactor);
-
 					int price = supplies[targetGoodsID].getValue();
 
 					player->alter(MONEY, -price);
@@ -605,7 +721,6 @@ void Game::run() {
 			system("cls");
 
 			vector<string> titleMenuItems = { "开始游戏", "读取进度", "退出游戏" };
-			generateMenuFromVector(titleMenuItems);
 			string selected = getSelectedMenuItem(titleMenuItems);
 
 			if (selected == "开始游戏") {
@@ -630,11 +745,10 @@ void Game::run() {
 			}
 
 			if (selected == "读取进度") {
-				loadProfile("profile/playerProfile.sav", "profile/sceneProfile.sav", player, currentScene);
-				system("cls");
+				loadProfile("profile/profile.sav", player, currentScene);
 				cout << "读取成功" << endl;
-				system("Pause");
 				gameState = SCENE;
+				system("Pause");
 			}
 
 			if (selected == "退出游戏")
@@ -652,7 +766,6 @@ void Game::run() {
 
 			// 显示菜单
 			vector<string> sceneMenuItems = { "移动", "背包", "交互", "系统" };
-			generateMenuFromVector(sceneMenuItems);
 
 			// 处理输入
 			string selected = getSelectedMenuItem(sceneMenuItems);
@@ -661,9 +774,9 @@ void Game::run() {
 			if (selected == "移动") {
 				system("cls");
 				listNeighbors(currentScene);
-				short option;
-				cin >> option;
-				if (option >= 1 && option <= currentScene->getNeighbors().size()) {
+				int option = getInputNumber(currentScene->getNeighbors().size());
+
+				if (option != 0) {
 					currentScene = currentScene->getNeighbors()[option - 1];
 				}
 			}
@@ -675,16 +788,26 @@ void Game::run() {
 
 			// 攻击
 			if (selected == "交互") {
-				system("cls");
-				char option;
-				cout << "1.交易\t" << "2.攻击\t" << "3.交谈\t" << "4.返回" << endl;
-				cin >> option;
-				if (option == '1')
-					gameState = TRADE;
-				if (option == '2')
-					gameState = FIGHT;
-				if (option == '3')
-					gameState = DIALOGUE;
+				char option = '0';
+				while (option != '4') {
+					system("cls");
+					cout << "1.交易\t" << "2.攻击\t" << "3.交谈\t" << "4.返回" << endl;
+					cin >> option;
+
+					if (option == '1') {
+						gameState = TRADE;
+						break;
+					}
+					if (option == '2') {
+						gameState = FIGHT;
+						break;
+					}
+					if (option == '3') {
+						gameState = DIALOGUE;
+						break;
+					}
+					
+				}
 			}
 
 			// 系统
@@ -692,15 +815,13 @@ void Game::run() {
 				system("cls");
 
 				vector<string> systemMenuItems = { "回到游戏", "返回标题", "保存进度" };
-				generateMenuFromVector(systemMenuItems);
 				string option = getSelectedMenuItem(systemMenuItems);
 
 				if (option == "返回标题")
 					gameState = TITLE;
 
 				if (option == "保存进度") {
-					saveProfile("profile/playerProfile.sav", "profile/sceneProfile.sav", player, currentScene);
-					system("cls");
+					saveProfile("profile/profile.sav", player, currentScene);
 					cout << "保存成功" << endl;
 					system("Pause");
 				}
@@ -711,7 +832,6 @@ void Game::run() {
 		case BAG: {
 			system("cls");
 			vector<string> itemTypeMenuItems = { "补给", "装备", "武器", "返回" };
-			generateMenuFromVector(itemTypeMenuItems);
 			string itemTypeMenuItem = getSelectedMenuItem(itemTypeMenuItems);
 
 			if (itemTypeMenuItem == "补给") {
@@ -720,28 +840,26 @@ void Game::run() {
 					system("cls");
 					listSupplies(player->getBag());
 					cout << "输入序号查看，输入0退出" << endl;
-					cin >> option;
+					option = getInputNumber(player->getBag()->getSupplies().size());
 					if (option == 0)
 						gameState = SCENE;
 					else {
-						if (option > 0 && option <= player->getBag()->getSupplies().size()) {
-							Supply* supplyItem = &supplies[player->getBag()->getSupplies()[option - 1]];
-							showItemInfo(supplyItem);
+						Supply* supplyItem = &supplies[player->getBag()->getSupplies()[option - 1]];
+						showItemInfo(supplyItem);
 
-							vector<string> bagMenuItems = { "使用", "丢弃", "返回" };
-							generateMenuFromVector(bagMenuItems);
-							string bagMenuItem = getSelectedMenuItem(bagMenuItems);
+						vector<string> bagMenuItems = { "使用", "丢弃", "返回" };
+						generateMenuFromVector(bagMenuItems);
+						string bagMenuItem = getSelectedMenuItem(bagMenuItems);
 
-							if (bagMenuItem == "使用") {
-								useSupply(player, supplyItem->getID());
-								player->getBag()->getSupplies().erase(player->getBag()->getSupplies().begin() + option - 1);
-							}
-							if (bagMenuItem == "丢弃") {
-								player->getBag()->getSupplies().erase(player->getBag()->getSupplies().begin() + option - 1);
-							}
-							if (bagMenuItem == "返回") {
+						if (bagMenuItem == "使用") {
+							useSupply(player, supplyItem->getID());
+							player->getBag()->getSupplies().erase(player->getBag()->getSupplies().begin() + option - 1);
+						}
+						if (bagMenuItem == "丢弃") {
+							player->getBag()->getSupplies().erase(player->getBag()->getSupplies().begin() + option - 1);
+						}
+						if (bagMenuItem == "返回") {
 
-							}
 						}
 					}
 
@@ -754,26 +872,23 @@ void Game::run() {
 					system("cls");
 					listArmors(player->getBag());
 					cout << "输入序号查看，输入0退出" << endl;
-					cin >> option;
+					option = getInputNumber(player->getBag()->getArmors().size());
 					if (option == 0)
 						gameState = SCENE;
 					else {
-						if (option > 0 && option <= player->getBag()->getArmors().size()) {
-							Armor* armor = &armors[player->getBag()->getArmors()[option - 1]];
-							showItemInfo(armor);
+						Armor* armor = &armors[player->getBag()->getArmors()[option - 1]];
+						showItemInfo(armor);
 
-							vector<string> bagMenuItems = { "使用", "丢弃", "返回" };
-							generateMenuFromVector(bagMenuItems);
-							string bagMenuItem = getSelectedMenuItem(bagMenuItems);
+						vector<string> bagMenuItems = { "使用", "丢弃", "返回" };
+						string bagMenuItem = getSelectedMenuItem(bagMenuItems);
 
-							if (bagMenuItem == "使用") {
-								if(player->getBag())
-								equipArmor(player, armor->getID());
-							}
+						if (bagMenuItem == "使用") {
+							if(player->getBag())
+							equipArmor(player, armor->getID());
+						}
 
-							if (bagMenuItem == "丢弃") {
-								player->getBag()->getArmors().erase(player->getBag()->getArmors().begin() + option - 1);
-							}
+						if (bagMenuItem == "丢弃") {
+							player->getBag()->getArmors().erase(player->getBag()->getArmors().begin() + option - 1);
 						}
 					}
 				}
@@ -785,27 +900,23 @@ void Game::run() {
 					system("cls");
 					listWeapons(player->getBag());
 					cout << "输入序号查看，输入0退出" << endl;
-					cin >> option;
+					option = getInputNumber(player->getBag()->getWeapons().size());
 					if (option == 0)
 						gameState = SCENE;
 					else {
-						if (option > 0 && option <= player->getBag()->getWeapons().size()) {
-							Weapon* weapon = &weapons[player->getBag()->getWeapons()[option - 1]];
-							showItemInfo(weapon);
+						Weapon* weapon = &weapons[player->getBag()->getWeapons()[option - 1]];
+						showItemInfo(weapon);
 
-							vector<string> bagMenuItems = { "使用", "丢弃", "返回" };
-							generateMenuFromVector(bagMenuItems);
-							string bagMenuItem = getSelectedMenuItem(bagMenuItems);
+						vector<string> bagMenuItems = { "使用", "丢弃", "返回" };
+						string bagMenuItem = getSelectedMenuItem(bagMenuItems);
 
-							if (bagMenuItem == "使用") {
-								equipWeapon(player, weapon->getID());
-							}
-
-							if (bagMenuItem == "丢弃") {
-								player->getBag()->getWeapons().erase(player->getBag()->getWeapons().begin() + option - 1);
-							}
+						if (bagMenuItem == "使用") {
+							equipWeapon(player, weapon->getID());
 						}
 
+						if (bagMenuItem == "丢弃") {
+							player->getBag()->getWeapons().erase(player->getBag()->getWeapons().begin() + option - 1);
+						}
 					}
 				}
 			}
@@ -826,8 +937,8 @@ void Game::run() {
 				}
 				cout << endl;
 				int option;
-				cin >> option;
-				if (option >= 1 && option <= currentScene->getNPCs().size()) {
+				option = getInputNumber(currentScene->getNPCs().size());
+				if (option != 0) {
 					fight(player, currentScene->getNPCs()[option - 1]);
 					if (player->attr(HEALTH) < 0) {
 						gameState = TITLE;
@@ -860,10 +971,8 @@ void Game::run() {
 					cout << ++order << "." << npc.getName() << '\t';
 				}
 				cout << endl;
-				char target;
-				cin >> target;
-				if (target >= '0' && target <= '9' ) {
-					int option = atoi(&target);
+				int option = getInputNumber(currentScene->getNPCs().size());
+				if (option != 0) {
 					if (currentScene->getNPCs()[option - 1]->getCareer() != 0) {
 						cout << "该NPC不可交易" << endl;
 						system("Pause");
@@ -891,10 +1000,8 @@ void Game::run() {
 					cout << ++order << "." << npc.getName() << '\t';
 				}
 				cout << endl;
-				char target;
-				cin >> target;
-				if (target > '0' && target <= '9' && atoi(&target) > 0 && atoi(&target) <= currentScene->getNPCs().size()) {
-					int option = atoi(&target);
+				int option = getInputNumber(currentScene->getNPCs().size());
+				if (option != 0) {
 					NPC* npc = currentScene->getNPCs()[option - 1];
 					if (npc->getTask().empty()) {
 						cout << getRandomDialogue(npc) << endl;

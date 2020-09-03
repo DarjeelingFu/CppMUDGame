@@ -6,13 +6,14 @@
 #include <map>
 #include "bag.h"
 
+
+using namespace std;
+
 enum TaskProgress {
 	DISMISS,
 	UNCOMPLISHED,
 	COMPLISHED
 };
-
-using namespace std;
 
 enum PlayerAttr {
 	HEALTH,

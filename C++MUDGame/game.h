@@ -39,8 +39,8 @@ public:
 	void loadWeapons(string path); // 加载武器
 	void loadNPCs(string path); // 加载NPC
 	void loadItemCollectingTasks(string path); // 加载所有物品收集任务
-	void saveProfile(string playerProfile, string sceneProfile, Player* player, Scene* currentScene); // 存档
-	void loadProfile(string playerProfile, string sceneProfile, Player* player, Scene* currentScene); // 读档
+	void saveProfile(string profile, Player* player, Scene* currentScene); // 存档
+	void loadProfile(string path, Player* player, Scene* currentScene); // 读档
 	void bindDoubleConnectedSences(Scene& scene_1, Scene& scene_2); // 双向连接
 	void bindSingleConnectedSences(Scene& depart, Scene& destination); // 单向连接
 	void showSceneInformation(Scene* scene); // 展示场景信息
@@ -67,6 +67,8 @@ public:
 	void eraeItem(Player* player, short id, int prompt); // 移除物品
 	void trade(Player* player, NPC* npc); // 交易
 	string getRandomDialogue(NPC* npc); // 随机获得一句对话
+	int getInputNumber(int limit); // 获得输入
+	bool isDigital(string input); // 判断是否为数字
 	void run(); // 游戏运行入口
 
 };
