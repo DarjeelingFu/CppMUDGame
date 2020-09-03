@@ -13,7 +13,8 @@ Game::Game() {
 	loadWeapons("data/weapons.dat");
 	loadNPCs("data/npcs.dat");
 	loadItemCollectingTasks("data/itemcollectingtask.dat");
-	
+	bindAllNPCsToScene();
+
 	player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
 
 	currentScene = &scenes[0];
@@ -22,11 +23,6 @@ Game::Game() {
 // 存档
 void Game::saveProfile(string path, Player* player, Scene* currentScene) {
 	fstream profile(path, ios::binary | ios::out);
-
-	// 写入玩家名称，先用int储存长度
-	// int nameSize = sizeof(player->getName());
-	// profile.write((char*)&nameSize, sizeof(int));
-	// profile.write(player->getName().c_str(), nameSize);
 
 	// 写入一系列属性
 	for (int i = 0; i < 6; i++) {
@@ -86,11 +82,43 @@ void Game::saveProfile(string path, Player* player, Scene* currentScene) {
 		profile.write((char*) & *ite, sizeof(short));
 	}
 
+	// 确定当前地图id
+	int sceneId = currentScene->getId();
+	profile.write((char*)&sceneId, sizeof(int));
+
+	// 写入任务状态
+	int tasksNum = collectingTasks.size();
+	profile.write((char*)&tasksNum, sizeof(int));
+
+	for (auto ite = collectingTasks.begin(); ite != collectingTasks.end(); ite++) {
+		bool state = ite->getState();
+		int taskState = ite->getTaskState();
+		profile.write((char*)&state, sizeof(bool));
+		profile.write((char*)&taskState, sizeof(int));
+	}
+
+	// 写入各场景NPC信息
+	int sceneNum = scenes.size();
+	profile.write((char*)&sceneNum, sizeof(int));
+	for (auto ite = scenes.begin(); ite != scenes.end(); ite++) {
+		int NPCNum = ite->getNPCs().size();
+		profile.write((char*)&NPCNum, sizeof(int));
+
+		if (NPCNum != 0) {
+			for (auto npc = ite->getNPCs().begin(); npc != ite->getNPCs().end(); npc++) {
+				NPC* NPCPt = *npc;
+				int NPCId = NPCPt->getId();
+				profile.write((char*)&NPCId, sizeof(int));
+			}
+		}
+
+	}
+
 	profile.close();
 }
 
 // 读档
-void Game::loadProfile(string path, Player* player, Scene* currentScene) {
+void Game::loadProfile(string path, Player* player, Scene** currentScene) {
 	fstream profile(path, ios::binary | ios::in);
 
 	// 读入一系列属性
@@ -104,6 +132,7 @@ void Game::loadProfile(string path, Player* player, Scene* currentScene) {
 	profile.read((char*)&money, sizeof(int));
 	player->attr(MONEY, money);
 
+	// 读入一系列物品
 	int lens[3];
 	profile.read((char*)lens, 3 * sizeof(int));
 
@@ -128,6 +157,7 @@ void Game::loadProfile(string path, Player* player, Scene* currentScene) {
 		player->getBag()->getWeapons().emplace_back(id);
 	}
 
+	// 读入已装备的物品
 	short equipments[5];
 	profile.read((char*)equipments, 5 * sizeof(short));
 
@@ -139,6 +169,41 @@ void Game::loadProfile(string path, Player* player, Scene* currentScene) {
 			equipArmor(player, equipments[i]);
 		}
 	}
+
+	// 读入当前地图
+	int sceneId;
+	profile.read((char*)&sceneId, sizeof(int));
+	*currentScene = &scenes[sceneId];
+
+	// 读入任务状态
+	int tasksNum;
+	profile.read((char*)&tasksNum, sizeof(int));
+	for (int i = 0; i < tasksNum; i++) {
+		bool state;
+		int taskState;
+		profile.read((char*)&state, sizeof(bool));
+		profile.read((char*)&taskState, sizeof(int));
+		collectingTasks[i].setState(state);
+		collectingTasks[i].setTaskState(taskState);
+	}
+
+	// 读入各场景NPC信息
+	int sceneNum;
+	profile.read((char*)&sceneNum, sizeof(int));
+	for (int i = 0; i < sceneNum; i++) {
+		int NPCNum;
+		profile.read((char*)&NPCNum, sizeof(int));
+		scenes[i].getNPCs().clear();
+		if (NPCNum != 0) {
+			for (int j = 0; j < NPCNum; j++) {
+				int NPCId;
+				profile.read((char*)&NPCId, sizeof(int));
+				scenes[i].getNPCs().emplace_back(&NPCs[NPCId]);
+			}
+		}
+	}
+
+	profile.close();
 }
 
 // 生成分隔符
@@ -725,27 +790,27 @@ void Game::run() {
 
 			if (selected == "开始游戏") {
 
-				// 进行新游戏，创建角色
-				player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
-				player->getBag()->addSupply(0);
-				player->getBag()->addSupply(1);
-				player->getBag()->addArmor(0);
-				player->getBag()->addArmor(1);
-				player->getBag()->addArmor(2);
-				player->getBag()->addWeapon(0);
+				//// 进行新游戏，创建角色
+				//player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
+				//player->getBag()->addSupply(0);
+				//player->getBag()->addSupply(1);
+				//player->getBag()->addArmor(0);
+				//player->getBag()->addArmor(1);
+				//player->getBag()->addArmor(2);
+				//player->getBag()->addWeapon(0);
 
-				// 确定当前地点
-				currentScene = &scenes[0];
+				//// 确定当前地点
+				//currentScene = &scenes[0];
 
-				// 绑定NPC
-				bindAllNPCsToScene();
+				//// 绑定NPC
+				//bindAllNPCsToScene();
 
 				gameState = SCENE;
 
 			}
 
 			if (selected == "读取进度") {
-				loadProfile("profile/profile.sav", player, currentScene);
+				loadProfile("profile/profile.sav", player, &currentScene);
 				cout << "读取成功" << endl;
 				gameState = SCENE;
 				system("Pause");
@@ -1009,25 +1074,15 @@ void Game::run() {
 						system("Pause");
 					}
 					else {
-						auto ite = npc->getTask().begin();
-						Task* task = *ite;
-						if (task->getState() == false) {
-							cout << task->getDialogueWithProgress(DISMISS) << endl;
-							cout << "1.接受\t" << "2.拒绝\t" << endl;
-							char option;
-							cin >> option;
-							if (option == '1') {
-								task->setState(true);
-								cout << endl << "已接受任务" << endl;
-								gameState = SCENE;
-								system("Pause");
-							}
-							else {
-								gameState = SCENE;
-								system("Pause");
-							}
+						Task* task = nullptr;
+
+						for (auto ite = npc->getTask().begin(); ite != npc->getTask().end(); ite++) {
+							task = *ite;
+							if (task->getState() == true)
+								break;
 						}
-						else {
+
+						if(task->getState() == true) {
 							int state = task->checkProgress(player);
 							if (state == UNCOMPLISHED) {
 								cout << task->getDialogueWithProgress(UNCOMPLISHED) << endl;
@@ -1045,12 +1100,10 @@ void Game::run() {
 								}break;
 
 								case ARMOR: {
-									player->getBag()->addArmor(armors[task->getRewardItemId()].getID());
 									cout << "获得了" << armors[task->getRewardItemId()].getName() << endl;
 								}break;
 
 								case WEAPON: {
-									player->getBag()->addWeapon(weapons[task->getRewardItemId()].getID());
 									cout << "获得了" << weapons[task->getRewardItemId()].getName() << endl;
 								}break;
 
@@ -1061,11 +1114,47 @@ void Game::run() {
 								eraeItem(player, task->getTargetItemId(), task->getTargetItemType());
 								cout << "移交了任务物品" << endl;
 
-								npc->getTask().erase(npc->getTask().begin());
+								task->setState(false);
+								task->setTaskState(COMPLISHED);
 								gameState = SCENE;
 								system("Pause");
 							}
 						}
+
+						else {
+
+							for (auto ite = npc->getTask().begin(); ite != npc->getTask().end(); ite++) {
+								task = *ite;
+								if (task->getTaskState() == DISMISS)
+									break;
+							}
+
+							if (task->getTaskState() == DISMISS) {
+								cout << task->getDialogueWithProgress(DISMISS) << endl;
+								cout << "1.接受\t" << "2.拒绝\t" << endl;
+								char option;
+								cin >> option;
+								if (option == '1') {
+									task->setState(true);
+									cout << endl << "已接受任务" << endl;
+									gameState = SCENE;
+									system("Pause");
+								}
+								else {
+									gameState = SCENE;
+									system("Pause");
+								}
+
+							}
+
+							else {
+								cout << getRandomDialogue(npc) << endl;
+								gameState = SCENE;
+								system("Pause");
+							}
+
+						}
+
 					}
 				}
 			}

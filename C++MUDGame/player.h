@@ -6,7 +6,6 @@
 #include <map>
 #include "bag.h"
 
-
 using namespace std;
 
 enum TaskProgress {
@@ -85,6 +84,7 @@ public:
 		dialogues[DISMISS] = dismiss;
 		dialogues[UNCOMPLISHED] = uncomplished;
 		dialogues[COMPLISHED] = complished;
+		taskState = DISMISS;
 	}
 
 public:
@@ -100,10 +100,13 @@ public:
 	int getTargetItemId() { return targetItemId; }
 
 	virtual int checkProgress(Player* player) = 0;
+	int getTaskState() { return taskState; }
+	void setTaskState(int taskState) { this->taskState = taskState; }
 
 private:
 	int npc;
-	bool state;
+	bool state; // 是否处于任务状态
+	int taskState;
 
 	map<int, string> dialogues;
 	int rewardItemType;
@@ -134,6 +137,7 @@ private:
 class NPC : public Player {
 public:
 	NPC(
+		int id,
 		string name,
 		float health,
 		float maxHealth,
@@ -148,13 +152,13 @@ public:
 		// string dialogue
 	) :
 		Player(name, health, maxHealth, strength, defence, sensitive, damage, money),
-		sceneID(sceneID), itemList(itemList), career(career) // dialogue(dialogue)
+		sceneID(sceneID), itemList(itemList), career(career), id(id)
 	{
 		
 	}
 
 	NPC(const NPC& npc) :
-		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career)
+		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career), id(npc.id)
 	{
 		for (auto ite = npc.dialogues.begin(); ite != npc.dialogues.end(); ite++) {
 			this->dialogues.emplace_back(*ite);
@@ -167,9 +171,11 @@ public:
 	string getItemList() { return itemList; }
 	int getCareer() { return career; }
 	vector<Task*>& getTask() { return tasks; }
+	int getId() { return id; }
 	// string getDialogue() { return dialogue; }
 
 private:
+	int id;
 	vector<string> dialogues;
 	int sceneID;
 	string itemList;
