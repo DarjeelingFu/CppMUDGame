@@ -19,6 +19,54 @@ Game::Game() {
 	player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
 
 	currentScene = &scenes[0];
+
+	printScroll();
+}
+
+// 打印封面
+void Game::printFile(string path) {
+	fstream cover(path, ios::in);
+
+	CONSOLE_FONT_INFOEX cfi;
+	cfi.cbSize = sizeof(cfi);
+	cfi.nFont = 0;
+	cfi.dwFontSize.X = 0;                   // Width of each character in the font
+	cfi.dwFontSize.Y = 16;                  // Height
+	// cfi.FontFamily = FF_DONTCARE;
+	// cfi.FontWeight = FW_NORMAL;
+	// std::wcscpy(cfi.FaceName, L"Consolas"); // Choose your font
+	SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &cfi);
+
+	while (!cover.eof()) {
+		string line;
+		getline(cover, line);
+		cout << line << endl;
+	}
+
+}
+
+// 加载进度条
+void Game::printScroll() {
+	float progress = 0;
+	float delta = 1;
+	char pattern = 48;
+	while (progress <= 100) {
+		progress += delta;
+		delta *= 1.2;
+		system("cls");
+		for (int i = 0; i < 10; i++)
+			cout << endl;
+		for (int i = 0; i < 50; i++)
+			cout << " ";
+		cout << "加载中" << endl << endl;
+		for (int i = 0; i < 10; i++)
+			cout << " ";
+		for (int i = 0; i <= (int)(progress * 0.9); i++)
+			cout << pattern;
+		Sleep(100);
+	}
+	Sleep(800);
+	system("cls");
 }
 
 // 存档
@@ -322,10 +370,12 @@ void Game::showPlayerInformation(Player* player) {
 // 生成菜单
 void Game::generateMenuFromVector(vector<string>& menuItems) {
 	int i = 1;
+	changeColor(0x07);
 	for (auto ite = menuItems.begin(); ite != menuItems.end(); ite++) {
 		cout << i++ << "." << *ite << '\t';
 	}
 	cout << endl;
+	changeColor(0x0F);
 }
 
 // 获得输入
@@ -364,17 +414,21 @@ string Game::getSelectedMenuItem(vector<string>& menuItems) {
 // 显示临近地点
 void Game::listNeighbors(Scene* currentScene) {
 	int i = 1;
+	changeColor(0x06);
 	for (int i = 0; i < currentScene->getNeighbors().size(); i++)
 		cout << i + 1 << "." << currentScene->getNeighbors()[i]->getName() << '\t';
 	cout << endl;
+	changeColor(0x0F);
 }
 
 // 展示物品详细信息
 void Game::showItemInfo(Item* item) {
+	changeColor(0x0E);
 	generateDecorations("+", 20);
 	cout << "[名称]" << '\t' << item->getName() << endl;
 	cout << "[描述]" << '\t' << item->getDescription() << endl;
 	generateDecorations("+", 20);
+	changeColor(0x0F);
 }
 
 // 展示补给品
@@ -917,7 +971,7 @@ void Game::run() {
 			showPlayerInformation(player);
 
 			// 显示菜单
-			vector<string> sceneMenuItems = { "移动", "背包", "交互", "系统" };
+			vector<string> sceneMenuItems = { "移动", "背包", "交互", "地图", "系统" };
 
 			// 处理输入
 			string selected = getSelectedMenuItem(sceneMenuItems);
@@ -977,6 +1031,12 @@ void Game::run() {
 					cout << "保存成功" << endl;
 					system("Pause");
 				}
+			}
+
+			if (selected == "地图") {
+				system("cls");
+				printFile("data/map.dat");
+				system("Pause");
 			}
 
 		}break;
@@ -1243,7 +1303,9 @@ void Game::run() {
 							}
 
 							else {
+								changeColor(0x09);
 								cout << getRandomDialogue(npc) << endl;
+								changeColor(0x0F);
 								gameState = SCENE;
 								system("Pause");
 							}

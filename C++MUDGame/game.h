@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <Windows.h>
+#include <windows.graphics.h>
 #include <math.h>
 
 enum GameState {
@@ -34,6 +35,8 @@ private:
 	Player* player;			// 玩家
 
 public:
+	void printScroll(); // 加载进度条
+	void printFile(string path); // 打印封面
 	void loadScene(string path); // 加载场景
 	void loadSupplyItems(string path); // 加载补给品
 	void loadArmors(string path); // 加载装备

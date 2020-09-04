@@ -163,7 +163,7 @@ public:
 
 	NPC(const NPC& npc) :
 		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career), id(npc.id),
-		armorList(npc.armorList), weaponList(weaponList)
+		armorList(npc.armorList), weaponList(npc.weaponList)
 	{
 		for (auto ite = npc.dialogues.begin(); ite != npc.dialogues.end(); ite++) {
 			this->dialogues.emplace_back(*ite);
