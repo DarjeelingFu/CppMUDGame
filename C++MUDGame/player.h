@@ -57,6 +57,7 @@ public:
 	Bag* getBag() { return &bag; }
 	float attr(int prompt, float setValue = -1); // 获取属性
 	void alter(int prompt, float value); // 用变化量改变属性
+	vector<short>& getBagWithItemTpye(int prompt);
 
 private:
 	string name;		// 名称
@@ -148,17 +149,21 @@ public:
 		int money,
 		int sceneID,
 		string itemList,
+		string armorList,
+		string weaponList,
 		int career
 		// string dialogue
 	) :
 		Player(name, health, maxHealth, strength, defence, sensitive, damage, money),
-		sceneID(sceneID), itemList(itemList), career(career), id(id)
+		sceneID(sceneID), itemList(itemList), career(career), id(id), armorList(armorList),
+		weaponList(weaponList)
 	{
 		
 	}
 
 	NPC(const NPC& npc) :
-		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career), id(npc.id)
+		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career), id(npc.id),
+		armorList(npc.armorList), weaponList(weaponList)
 	{
 		for (auto ite = npc.dialogues.begin(); ite != npc.dialogues.end(); ite++) {
 			this->dialogues.emplace_back(*ite);
@@ -169,6 +174,8 @@ public:
 	vector<string>& getDialogues() { return dialogues; }
 	int getSceneID() { return sceneID; }
 	string getItemList() { return itemList; }
+	string getArmorList() { return armorList; }
+	string getWeaponList() { return weaponList; }
 	int getCareer() { return career; }
 	vector<Task*>& getTask() { return tasks; }
 	int getId() { return id; }
@@ -179,6 +186,8 @@ private:
 	vector<string> dialogues;
 	int sceneID;
 	string itemList;
+	string armorList;
+	string weaponList;
 	int career;
 	vector<Task*> tasks;
 	// string dialogue;

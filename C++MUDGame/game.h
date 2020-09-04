@@ -6,6 +6,7 @@
 #include "scene.h"
 #include <stdlib.h>
 #include <algorithm>
+#include <Windows.h>
 #include <math.h>
 
 enum GameState {
@@ -52,10 +53,10 @@ public:
 	void listSupplies(Bag* bag); // 展示背包中的补给品
 	void useSupply(Player* player, short id); // 使用补给品
 	void listArmors(Bag* bag); // 展示背包中的装备
-	void equipArmor(Player* player, short id); // 穿着装备
+	void equipArmor(Player* player, short id, bool toggle = true); // 穿着装备
 	void refreshAttrAboutArmor(Player* player); // 穿着后刷新属性值
 	void listWeapons(Bag* bag); // 展示背包中的武器
-	void equipWeapon(Player* player, short id); // 装备武器
+	void equipWeapon(Player* player, short id, bool toggle = true); // 装备武器
 	void bindNPCWToScene(Scene* scene, NPC* npc); // 绑定NPC到场景
 	void bindAllNPCsToScene(); // 处理所有NPC与地图的绑定
 	void showNPCInScene(Scene* scene); // 显示场景中的NPC
@@ -64,11 +65,15 @@ public:
 	int round(Player* player, NPC* enemy); // 玩家回合
 	void getRandItemsForDefeatedEnemy(Player* player, NPC* enemy); // 获得掉落物品
 	void giveItem(Player* player, short id, int prompt); // 给予物品
-	void eraeItem(Player* player, short id, int prompt); // 移除物品
+	void eraseItem(Player* player, short id, int prompt); // 移除物品
 	void trade(Player* player, NPC* npc); // 交易
 	string getRandomDialogue(NPC* npc); // 随机获得一句对话
 	int getInputNumber(int limit); // 获得输入
 	bool isDigital(string input); // 判断是否为数字
+	int showItemInfoForTrading(Player* npc, int prompt, bool isSold); // 交易时展示物品信息
+	int getPrice(short id, int prompt, bool isSold); // 获得物品价格
+	auto getSource(int prompt); // 获得某一库存
+	void changeColor(WORD word); // 改变字体颜色
 	void run(); // 游戏运行入口
 
 };
