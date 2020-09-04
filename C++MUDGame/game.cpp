@@ -280,14 +280,17 @@ void Game::showSceneInformation(Scene* scene) {
 // 展示玩家信息
 void Game::showPlayerInformation(Player* player) {
 	generateDecorations("=", 20);
+	changeColor(0x02);
 	cout << "[名称]\t" << player->getName() << endl;
 	cout << "[血量]\t" << player->attr(HEALTH) << endl;
 	cout << "[防御]\t" << player->attr(DEFENCE) << endl;
 	cout << "[敏捷]\t" << player->attr(SENSITIVE) << endl;
 	cout << "[伤害]\t" << player->attr(DAMAGE) << endl;
 	cout << "[金钱]\t" << (int)player->attr(MONEY) << endl;
+	changeColor(0x0F);
 	generateDecorations("-", 20);
 
+	changeColor(0x0D);
 	if (!player->getBag()->weaponSlot.empty())
 		cout << "[武器]\t" << weapons[player->getBag()->weaponSlot.top()].getName() << endl;
 	else
@@ -312,7 +315,7 @@ void Game::showPlayerInformation(Player* player) {
 		cout << "[足部]\t" << armors[player->getBag()->footArmorSlot.top()].getName() << endl;
 	else
 		cout << "[足部]\t" << "无" << endl;
-
+	changeColor(0x0F);
 	generateDecorations("=", 20);
 }
 
