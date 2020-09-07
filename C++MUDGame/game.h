@@ -16,7 +16,8 @@ enum GameState {
 	BAG,
 	FIGHT,
 	TRADE,
-	DIALOGUE
+	DIALOGUE,
+	REBORN
 };
 
 class Game {
@@ -35,6 +36,7 @@ private:
 	Player* player;			// 玩家
 
 public:
+	void initialize(); // 初始化
 	void printScroll(); // 加载进度条
 	void printFile(string path); // 打印封面
 	void loadScene(string path); // 加载场景
@@ -77,6 +79,8 @@ public:
 	int getPrice(short id, int prompt, bool isSold); // 获得物品价格
 	auto getSource(int prompt); // 获得某一库存
 	void changeColor(WORD word); // 改变字体颜色
+	void checkAccess(Scene* currentScene, Scene* nectScene, int NPCId); // 检查通行状态
+	void clearAssets(); // 清空资源
 	void run(); // 游戏运行入口
 
 };

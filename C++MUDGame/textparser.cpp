@@ -11,13 +11,14 @@ void Game::loadScene(string path) {
 	while (!file.eof()) {
 		c = file.get();
 		if (c == '#') {
-			string name, description, connected;
+			string name, description, connected, isBlocked;
 			getline(file, name);
 			getline(file, name);
 			getline(file, description);
 			getline(file, connected);
+			getline(file, isBlocked);
 
-			scenes.emplace_back(Scene(order++, name, description, connected));
+			scenes.emplace_back(Scene(order++, name, description, connected, stoi(isBlocked)));
 		}
 	}
 	file.close();

@@ -7,6 +7,14 @@ using namespace std;
 // 构造函数
 Game::Game() {
 
+	initialize();
+	printFile("data/cover.dat");
+	system("Pause");
+	// printScroll();
+}
+
+// 初始化
+void Game::initialize() {
 	loadScene("data/scenes.dat");
 	loadSupplyItems("data/supplies.dat");
 	loadArmors("data/armors.dat");
@@ -15,12 +23,10 @@ Game::Game() {
 	loadItemCollectingTasks("data/itemcollectingtask.dat");
 
 	bindAllNPCsToScene();
-
+	
 	player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
 
 	currentScene = &scenes[0];
-
-	printScroll();
 }
 
 // 打印封面
@@ -861,7 +867,7 @@ void Game::trade(Player* player, NPC* npc) {
 
 			if (targetGood != 0) {
 				int price = getPrice(npc->getBagWithItemTpye(option - 1)[targetGood - 1], option - 1, false);
-				if (player->attr(MONEY) > price) {
+				if (player->attr(MONEY) >= price) {
 					giveItem(player, npc->getBagWithItemTpye(option - 1)[targetGood - 1], option - 1);
 					eraseItem(npc, npc->getBagWithItemTpye(option - 1)[targetGood - 1], option - 1);
 					player->alter(MONEY, -price);
@@ -914,6 +920,29 @@ void Game::trade(Player* player, NPC* npc) {
 // 随机获得一句对话
 string Game::getRandomDialogue(NPC* npc) {
 	return npc->getDialogues()[rand() % npc->getDialogues().size()];
+}
+
+// 检查通行状态
+void Game::checkAccess(Scene* currentScene, Scene* nextScene, int NPCId) {
+	if (currentScene->blockedNeighbor() != nextScene->getId())
+		return;
+	for (auto ite = currentScene->getNPCs().begin(); ite != currentScene->getNPCs().end(); ite++) {
+		NPC* npc = *ite;
+		if (npc->getId() == NPCId) {
+			return;
+		}
+	}
+	currentScene->setAccess(-1);
+}
+
+// 清空资源
+void Game::clearAssets() {
+	scenes.clear();
+	supplies.clear();
+	armors.clear();
+	weapons.clear();
+	NPCs.clear();
+	collectingTasks.clear();
 }
 
 // 运行
@@ -983,7 +1012,14 @@ void Game::run() {
 				int option = getInputNumber(currentScene->getNeighbors().size());
 
 				if (option != 0) {
-					currentScene = currentScene->getNeighbors()[option - 1];
+					Scene* nextScene = currentScene->getNeighbors()[option - 1];
+					checkAccess(currentScene, nextScene, 9);
+					if (currentScene->blockedNeighbor() == nextScene->getId()) {
+						cout << "目前无法通行" << endl;
+						system("Pause");
+					}
+					else
+						currentScene = nextScene;
 				}
 			}
 
@@ -1151,12 +1187,12 @@ void Game::run() {
 				option = getInputNumber(currentScene->getNPCs().size() + 1);
 				if (option != 0 && option != order) {
 					fight(player, currentScene->getNPCs()[option - 1]);
-					if (player->attr(HEALTH) < 0) {
+					if (player->attr(HEALTH) <= 0) {
 						cout << "已死亡" << endl;
 						system("Pause");
-						gameState = TITLE;
+						gameState = REBORN;
 					}
-					else if (currentScene->getNPCs()[option - 1]->attr(HEALTH) < 0) {
+					else if (currentScene->getNPCs()[option - 1]->attr(HEALTH) <= 0) {
 						cout << "敌人被击败" << endl;
 						getRandItemsForDefeatedEnemy(player, currentScene->getNPCs()[option - 1]);
 						currentScene->getNPCs().erase(currentScene->getNPCs().begin() + option - 1);
@@ -1320,7 +1356,13 @@ void Game::run() {
 				gameState = SCENE;
 				system("Pause");
 			}
-		}
+		}break;
+
+		case REBORN: {
+			clearAssets();
+			initialize();
+			gameState = TITLE;
+		}break;
 
 		default:
 			break;
