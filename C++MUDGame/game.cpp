@@ -972,6 +972,9 @@ void Game::run() {
 				// 进行新游戏，创建角色
 				player = new Player("Player", 100, 100, 100, 0, 50, 10, 100);
 
+				clearAssets();
+				initialize();
+
 				// 确定当前地点
 				currentScene = &scenes[0];
 
