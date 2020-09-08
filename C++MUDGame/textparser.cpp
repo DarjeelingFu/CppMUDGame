@@ -11,13 +11,14 @@ void Game::loadScene(string path) {
 	while (!file.eof()) {
 		c = file.get();
 		if (c == '#') {
-			string name, description, connected;
+			string name, description, connected, isBlocked;
 			getline(file, name);
 			getline(file, name);
 			getline(file, description);
 			getline(file, connected);
+			getline(file, isBlocked);
 
-			scenes.emplace_back(Scene(order++, name, description, connected));
+			scenes.emplace_back(Scene(order++, name, description, connected, stoi(isBlocked)));
 		}
 	}
 	file.close();
@@ -123,7 +124,8 @@ void Game::loadNPCs(string path) {
 	while (!file.eof()) {
 		c = file.get();
 		if (c == '#') {
-			string name, health, maxHealth, strength, defence, sensitive, damage, money, sceneID, items, career;
+			string name, health, maxHealth, strength, defence, sensitive, damage, money, sceneID;
+			string item_s, armor_s, weapon_s, career;
 			getline(file, name); // ÏûÊÍµôÒ»ÐÐ
 
 			getline(file, name);
@@ -135,7 +137,9 @@ void Game::loadNPCs(string path) {
 			getline(file, damage);
 			getline(file, money);
 			getline(file, sceneID);
-			getline(file, items);
+			getline(file, item_s);
+			getline(file, armor_s);
+			getline(file, weapon_s);
 			getline(file, career);
 
 			NPCs.emplace_back(NPC(
@@ -149,7 +153,9 @@ void Game::loadNPCs(string path) {
 				atof(damage.c_str()),
 				atoi(money.c_str()),
 				atoi(sceneID.c_str()),
-				items,
+				item_s,
+				armor_s,
+				weapon_s,
 				atoi(career.c_str())
 			));
 
@@ -184,6 +190,43 @@ void Game::loadNPCs(string path) {
 				ite->getBag()->addSupply(*ite1);
 			}
 		}
+
+		if (ite->getArmorList() != "-1") {
+			vector<int> itemList;
+			string connected = ite->getArmorList();
+
+			int j = 0;
+			for (int i = 0; i < connected.length(); i++) {
+				if (connected[i] == ' ') {
+					itemList.emplace_back(atoi(connected.substr(j, i).c_str()));
+					j = i;
+				}
+			}
+			itemList.emplace_back(atoi(connected.substr(j, connected.length()).c_str()));
+
+			for (auto ite1 = itemList.begin(); ite1 != itemList.end(); ite1++) {
+				ite->getBag()->addArmor(*ite1);
+			}
+		}
+
+		if (ite->getWeaponList() != "-1") {
+			vector<int> itemList;
+			string connected = ite->getWeaponList();
+
+			int j = 0;
+			for (int i = 0; i < connected.length(); i++) {
+				if (connected[i] == ' ') {
+					itemList.emplace_back(atoi(connected.substr(j, i).c_str()));
+					j = i;
+				}
+			}
+			itemList.emplace_back(atoi(connected.substr(j, connected.length()).c_str()));
+
+			for (auto ite1 = itemList.begin(); ite1 != itemList.end(); ite1++) {
+				ite->getBag()->addWeapon(*ite1);
+			}
+		}
+
 
 	}
 }

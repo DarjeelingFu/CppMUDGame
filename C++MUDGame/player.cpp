@@ -125,3 +125,21 @@ int ItemCollectingTask::checkProgress(Player* player) {
 
 	return UNCOMPLISHED;
 }
+
+// 根据提示获取对应背包
+vector<short>& Player::getBagWithItemTpye(int prompt) {
+	switch (prompt)
+	{
+	case SUPPLY: {
+		return bag.getSupplies();
+	}
+	case ARMOR: {
+		return bag.getArmors();
+	}
+	case WEAPON: {
+		return bag.getWeapons();
+	}
+	default:
+		break;
+	}
+}
