@@ -9,11 +9,11 @@ using namespace std;
 
 class Scene {
 public:
-	Scene(string name, string description, string connected) :
-		name(name), description(description), connected(connected) {}
+	Scene(int id, string name, string description, string connected) :
+		name(name), description(description), connected(connected), id(id) {}
 
 	Scene(const Scene& scene) : 
-		name(scene.name), description(scene.description),
+		name(scene.name), description(scene.description), id(scene.id),
 		connected(scene.connected), neighbors(scene.neighbors) {}
 
 	~Scene() {}
@@ -24,8 +24,11 @@ public:
 	string getDescription() { return description; }
 	string getConnected() { return connected; }
 	vector<NPC*>& getNPCs() { return NPCs; }
+	int getId() { return id; }
+	void setSceneId(int id) { this->id = id; }
 
 private:
+	int id;
 	string name;
 	string description;
 	string connected;

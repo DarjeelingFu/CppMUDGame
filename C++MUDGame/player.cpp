@@ -11,7 +11,7 @@ float Player::attr(int prompt, float setValue) {
 
 	case MAXHEALTH:
 		if (setValue != -1)
-			health = setValue;
+			maxHealth = setValue;
 		return maxHealth;
 
 	case STRENGTH:

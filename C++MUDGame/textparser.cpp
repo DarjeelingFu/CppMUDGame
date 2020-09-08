@@ -7,6 +7,7 @@ using namespace std;
 void Game::loadScene(string path) {
 	fstream file(path, ios::in);
 	char c;
+	int order = 0;
 	while (!file.eof()) {
 		c = file.get();
 		if (c == '#') {
@@ -16,7 +17,7 @@ void Game::loadScene(string path) {
 			getline(file, description);
 			getline(file, connected);
 
-			scenes.emplace_back(Scene(name, description, connected));
+			scenes.emplace_back(Scene(order++, name, description, connected));
 		}
 	}
 	file.close();
@@ -138,6 +139,7 @@ void Game::loadNPCs(string path) {
 			getline(file, career);
 
 			NPCs.emplace_back(NPC(
+				order,
 				name,
 				atof(health.c_str()),
 				atof(maxHealth.c_str()),
@@ -157,7 +159,7 @@ void Game::loadNPCs(string path) {
 				NPCs[order].getDialogues().emplace_back(dialogue);
 				getline(file, dialogue);
 			}
-
+			order++;
 		}
 	}
 

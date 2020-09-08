@@ -6,13 +6,13 @@
 #include <map>
 #include "bag.h"
 
+using namespace std;
+
 enum TaskProgress {
 	DISMISS,
 	UNCOMPLISHED,
 	COMPLISHED
 };
-
-using namespace std;
 
 enum PlayerAttr {
 	HEALTH,
@@ -84,12 +84,14 @@ public:
 		dialogues[DISMISS] = dismiss;
 		dialogues[UNCOMPLISHED] = uncomplished;
 		dialogues[COMPLISHED] = complished;
+		taskState = DISMISS;
 	}
 
 public:
 	int getNPC() { return npc; }
 	string getDialogueWithProgress(int progress) { return dialogues[progress]; }
 	bool getState() { return state; }
+	void setState(bool state) { this->state = state; }
 
 	int getRewardItemType() { return rewardItemType; }
 	int getRewardItemId() { return rewardItemId; }
@@ -98,10 +100,13 @@ public:
 	int getTargetItemId() { return targetItemId; }
 
 	virtual int checkProgress(Player* player) = 0;
+	int getTaskState() { return taskState; }
+	void setTaskState(int taskState) { this->taskState = taskState; }
 
 private:
 	int npc;
-	bool state;
+	bool state; // 是否处于任务状态
+	int taskState;
 
 	map<int, string> dialogues;
 	int rewardItemType;
@@ -132,6 +137,7 @@ private:
 class NPC : public Player {
 public:
 	NPC(
+		int id,
 		string name,
 		float health,
 		float maxHealth,
@@ -143,17 +149,20 @@ public:
 		int sceneID,
 		string itemList,
 		int career
+		// string dialogue
 	) :
 		Player(name, health, maxHealth, strength, defence, sensitive, damage, money),
-		sceneID(sceneID), itemList(itemList), career(career)
+		sceneID(sceneID), itemList(itemList), career(career), id(id)
 	{
-		// task = NULL;
+		
 	}
 
 	NPC(const NPC& npc) :
-		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career)
+		Player(npc), sceneID(npc.sceneID), itemList(npc.itemList), career(npc.career), id(npc.id)
 	{
-		// task = npc.task;
+		for (auto ite = npc.dialogues.begin(); ite != npc.dialogues.end(); ite++) {
+			this->dialogues.emplace_back(*ite);
+		}
 	}
 
 public:
@@ -162,13 +171,17 @@ public:
 	string getItemList() { return itemList; }
 	int getCareer() { return career; }
 	vector<Task*>& getTask() { return tasks; }
+	int getId() { return id; }
+	// string getDialogue() { return dialogue; }
 
 private:
+	int id;
 	vector<string> dialogues;
 	int sceneID;
 	string itemList;
 	int career;
 	vector<Task*> tasks;
+	// string dialogue;
 
 };
 
